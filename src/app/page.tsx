@@ -1,102 +1,384 @@
+"use client";
+
 import Image from "next/image";
+import { useMemo, useState } from "react";
+
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+  desc: string;
+  tags: string[]; // without '#'
+  image: string; // public path
+};
+
+const WA_NUMBER = process.env.NEXT_PUBLIC_WA_NUMBER ?? "6281515174447"; // edit via env or replace here
+
+const productsSeed: Product[] = [
+  {
+    id: "roti-tawar-gandum",
+    name: "Roti Tawar Gandum",
+    price: 20000,
+    desc: "Roti gandum lembut, tinggi serat, cocok untuk sarapan sehat.",
+    tags: ["roti", "sehat", "best_seller"],
+    image: "/bakery/bread.svg",
+  },
+  {
+    id: "croissant-butter",
+    name: "Croissant Butter",
+    price: 15000,
+    desc: "Lapisan renyah dan buttery, dibuat fresh setiap pagi.",
+    tags: ["croissant", "mentega"],
+    image: "/bakery/croissant.svg",
+  },
+  {
+    id: "donat-cokelat",
+    name: "Donat Cokelat",
+    price: 12000,
+    desc: "Donat empuk dengan glaze cokelat premium favorit semua umur.",
+    tags: ["donat", "cokelat", "diskon"],
+    image: "/bakery/donut.svg",
+  },
+  {
+    id: "kue-lapis-pandan",
+    name: "Kue Lapis Pandan",
+    price: 25000,
+    desc: "Aroma pandan wangi dengan tekstur legit khas jajanan nusantara.",
+    tags: ["kue", "pandan"],
+    image: "/bakery/cake.svg",
+  },
+  {
+    id: "cinnamon-roll",
+    name: "Cinnamon Roll",
+    price: 18000,
+    desc: "Gulungan manis kayu manis dengan glaze gula halus.",
+    tags: ["roll", "kayu_manis"],
+    image: "/bakery/roll.svg",
+  },
+  {
+    id: "cheesecake-slice",
+    name: "Cheese Cake Slice",
+    price: 30000,
+    desc: "Cheesecake creamy dengan dasar biskuit gurih, lumer di mulut.",
+    tags: ["cake", "keju"],
+    image: "/bakery/cheese-cake.svg",
+  },
+];
+
+function currency(idr: number) {
+  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(idr);
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [detail, setDetail] = useState<Product | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
+  const products = productsSeed;
+  const tags = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => p.tags.forEach((t) => set.add(t)));
+    return ["semua", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+  }, [products]);
+
+  const filtered = useMemo(() => {
+    if (!selectedTag || selectedTag === "semua") return products;
+    return products.filter((p) => p.tags.includes(selectedTag));
+  }, [products, selectedTag]);
+
+  const handleOrder = (p: Product) => {
+    const text = encodeURIComponent(
+      `Halo Ghani Bakery! Saya mau pesan ${p.name} (${p.id}). Harga: ${currency(p.price)}. Apakah tersedia hari ini?`
+    );
+    const link = `https://wa.me/${WA_NUMBER}?text=${text}`;
+    window.open(link, "_blank", "noopener,noreferrer");
+  };
+
+  return (
+    <div className="min-h-dvh flex flex-col bg-white">
+      {/* Navbar */}
+      <div className="sticky top-0 z-40 border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+        <div className="mx-auto max-w-6xl px-6 h-14 flex items-center justify-between">
+          <a href="#home" className="flex items-center gap-2">
+            <span className="inline-block h-3 w-3 rounded-full bg-[#16a34a]" />
+            <span className="text-sm font-extrabold tracking-tight">Ghani Bakery</span>
           </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          <nav className="hidden sm:flex items-center gap-6 text-sm">
+            <a href="#menu" className="hover:text-[#0f7a36]">Menu</a>
+            <a href="#keunggulan" className="hover:text-[#0f7a36]">Keunggulan</a>
+            <a href="#tentang" className="hover:text-[#0f7a36]">Tentang</a>
+            <a
+              href={`https://wa.me/${WA_NUMBER}`}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="rounded-full bg-[#16a34a] text-white px-4 py-2 font-semibold hover:brightness-105"
+            >
+              Order WA
+            </a>
+          </nav>
+        </div>
+        {/* Promo bar */}
+        <div className="w-full bg-[#ebc334] text-[#0f7a36] text-xs sm:text-sm">
+          <div className="mx-auto max-w-6xl px-6 py-2 flex items-center justify-between">
+            <span className="font-semibold">Promo: Donat #diskon hari ini!</span>
+            <button
+              onClick={() => setSelectedTag("diskon")}
+              className="underline underline-offset-2 hover:opacity-90"
+            >
+              Lihat item #diskon
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Hero */}
+      <header id="home" className="relative isolate bg-white">
+        <div className="absolute -z-10 inset-0 bg-[radial-gradient(1000px_600px_at_10%_-10%,_rgba(22,163,74,0.08),transparent_60%),radial-gradient(900px_500px_at_110%_0%,_rgba(235,195,52,0.12),transparent_60%)]" />
+
+        <div className="mx-auto max-w-6xl px-6 pt-16 pb-12 sm:pt-24 sm:pb-16">
+          <div className="grid gap-10 sm:grid-cols-2 items-center">
+            <div className="animate-slide-up [animation-delay:60ms]">
+              <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium text-[#0f7a36] border-[#16a34a]/20 bg-[#ebc334]/20">
+                Fresh Every Morning
+                <span className="inline-block h-2 w-2 rounded-full bg-[#16a34a] animate-pulse" />
+              </span>
+              <h1 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
+                Ghani Bakery
+              </h1>
+              <p className="mt-3 text-balance text-[15px] sm:text-base text-black/70">
+                Roti, kue, dan pastry segar setiap hari. Dibuat dengan bahan
+                berkualitas, rasa istimewa untuk momen spesial Anda.
+              </p>
+              <div className="mt-6 flex items-center gap-3">
+                <a
+                  href="#menu"
+                  className="shimmer inline-flex items-center justify-center rounded-full bg-[#16a34a] px-5 py-3 text-white text-sm font-semibold shadow-[0_10px_25px_-10px_rgba(22,163,74,0.7)] hover:brightness-[1.05] transition"
+                >
+                  Lihat Menu
+                </a>
+                <button
+                  onClick={() => handleOrder(products[0])}
+                  className="inline-flex items-center justify-center rounded-full border border-[#16a34a]/30 px-5 py-3 text-sm font-semibold text-[#0f7a36] hover:bg-[#ebc334]/30 transition"
+                >
+                  Order Cepat via WA
+                </button>
+              </div>
+            </div>
+            <div className="relative flex justify-center animate-fade-in [animation-delay:120ms]">
+              <div className="relative h-[240px] w-[240px] sm:h-[300px] sm:w-[300px]">
+                <div className="absolute -inset-6 -z-10 rounded-full bg-[#ebc334]/30 blur-2xl" />
+                <Image
+                  src="/bakery/hero-basket.svg"
+                  alt="Ilustrasi keranjang roti"
+                  fill
+                  className="object-contain drop-shadow-2xl animate-float"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Keunggulan */}
+      <section id="keunggulan" className="mx-auto w-full max-w-6xl px-6 pb-10">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl border p-4 bg-white">
+            <div className="text-2xl">🥐</div>
+            <div className="mt-2 font-bold">Fresh Setiap Hari</div>
+            <div className="text-sm text-black/70">Dibuat pagi, siap dinikmati kapan saja.</div>
+          </div>
+          <div className="rounded-2xl border p-4 bg-white">
+            <div className="text-2xl">🧑‍🍳</div>
+            <div className="mt-2 font-bold">Handmade</div>
+            <div className="text-sm text-black/70">Resep rumahan dengan bahan berkualitas.</div>
+          </div>
+          <div className="rounded-2xl border p-4 bg-white">
+            <div className="text-2xl">✅</div>
+            <div className="mt-2 font-bold">Halal</div>
+            <div className="text-sm text-black/70">Aman dan lezat untuk keluarga.</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Menu + Filters */}
+      <main id="menu" className="mx-auto w-full max-w-6xl px-6 pb-24">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-2xl font-bold">Menu Populer</h2>
+        </div>
+
+        {/* Tags */}
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {tags.map((tag) => {
+            const active = selectedTag ? selectedTag === tag : tag === "semua";
+            return (
+              <button
+                key={tag}
+                onClick={() => setSelectedTag(tag === "semua" ? null : tag)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                  active
+                    ? "bg-[#16a34a] text-white border-transparent shadow-[0_10px_20px_-12px_rgba(22,163,74,.8)]"
+                    : "bg-white text-[#0f7a36] border-[#16a34a]/30 hover:bg-[#ebc334]/20"
+                }`}
+                aria-pressed={active}
+              >
+                {tag === "semua" ? "#semua" : `#${tag}`}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Grid */}
+        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((p, i) => (
+            <article
+              key={p.id}
+              className="group relative overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm transition hover:shadow-[0_18px_40px_-15px_rgba(0,0,0,.25)] animate-slide-up"
+              style={{ animationDelay: `${80 + i * 40}ms` }}
+            >
+              <div className="relative h-44 w-full overflow-hidden bg-[linear-gradient(160deg,_#ebc334_0%,_#fff_65%)]">
+                <Image
+                  src={p.image}
+                  alt={p.name}
+                  fill
+                  className="object-contain p-6 transition duration-300 group-hover:scale-105"
+                />
+                {p.tags.includes("best_seller") && (
+                  <div className="absolute left-3 top-3 rounded-full bg-[#16a34a] px-2 py-1 text-[11px] font-semibold text-white">
+                    Best Seller
+                  </div>
+                )}
+                <div className="absolute right-3 top-3 rounded-full bg-white/80 px-2 py-1 text-[11px] font-semibold text-[#0f7a36]">
+                  {currency(p.price)}
+                </div>
+              </div>
+              <div className="p-4">
+                <h3 className="text-lg font-semibold tracking-tight">{p.name}</h3>
+                <p className="mt-1 line-clamp-2 text-sm text-black/60">{p.desc}</p>
+
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {p.tags.map((t) => (
+                    <span key={t} className="rounded-full bg-[#ebc334]/30 px-2 py-0.5 text-[11px] font-medium text-[#0f7a36]">
+                      #{t}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => setDetail(p)}
+                    className="inline-flex flex-1 items-center justify-center rounded-full border border-[#16a34a]/30 px-3 py-2 text-sm font-semibold text-[#0f7a36] hover:bg-[#ebc334]/30 transition"
+                  >
+                    Detail
+                  </button>
+                  <button
+                    onClick={() => handleOrder(p)}
+                    className="inline-flex flex-1 items-center justify-center rounded-full bg-[#16a34a] px-3 py-2 text-sm font-semibold text-white hover:brightness-[1.05] transition"
+                  >
+                    Pesan via WA
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+      {/* Tentang */}
+      <section id="tentang" className="bg-white border-t">
+        <div className="mx-auto max-w-6xl px-6 py-14 grid gap-8 sm:grid-cols-2 items-center">
+          <div>
+            <h3 className="text-2xl font-bold">Tentang Ghani Bakery</h3>
+            <p className="mt-3 text-black/70 text-sm">
+              Kami menghadirkan roti, kue, dan pastry segar yang dibuat dari bahan
+              pilihan. Mengutamakan rasa dan kualitas, siap menemani sarapan,
+              camilan sore, hingga hantaran spesial untuk orang tersayang.
+            </p>
+            <div className="mt-5 flex gap-3">
+              <a href="#menu" className="rounded-full bg-[#16a34a] text-white px-4 py-2 text-sm font-semibold">Jelajahi Menu</a>
+              <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noreferrer noopener" className="rounded-full border border-[#16a34a]/30 text-[#0f7a36] px-4 py-2 text-sm font-semibold">Tanya Ketersediaan</a>
+            </div>
+          </div>
+          <div className="relative">
+            <div className="absolute -inset-6 -z-10 rounded-3xl bg-[#ebc334]/30 blur-2xl" />
+            <div className="rounded-3xl border bg-white p-6">
+              <div className="text-sm font-semibold text-[#0f7a36]">Jam Operasional</div>
+              <div className="mt-1 text-sm text-black/70">Setiap hari 07.00 – 20.00</div>
+              <div className="mt-4 text-sm font-semibold text-[#0f7a36]">Lokasi</div>
+              <div className="mt-1 text-sm text-black/70">Ghani Bakery, Kota Anda</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Detail Modal */}
+      {detail && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4 animate-fade-in"
+          onClick={() => setDetail(null)}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+          <div
+            className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative h-48 w-full bg-[linear-gradient(160deg,_#ebc334_0%,_#fff_65%)]">
+              <Image src={detail.image} alt={detail.name} fill className="object-contain p-6" />
+              <button
+                aria-label="Tutup"
+                onClick={() => setDetail(null)}
+                className="absolute right-2 top-2 rounded-full bg-white/80 px-2 py-1 text-xs font-semibold text-[#0f7a36] hover:bg-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4">
+              <h3 className="text-xl font-bold">{detail.name}</h3>
+              <div className="mt-1 text-[#0f7a36] font-semibold">{currency(detail.price)}</div>
+              <p className="mt-2 text-sm text-black/70">{detail.desc}</p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {detail.tags.map((t) => (
+                  <span key={t} className="rounded-full bg-[#ebc334]/30 px-2 py-0.5 text-[11px] font-medium text-[#0f7a36]">
+                    #{t}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-5 grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setDetail(null)}
+                  className="inline-flex items-center justify-center rounded-full border border-black/10 px-4 py-2 text-sm font-semibold hover:bg-black/[.04]"
+                >
+                  Tutup
+                </button>
+                <button
+                  onClick={() => handleOrder(detail)}
+                  className="shimmer inline-flex items-center justify-center rounded-full bg-[#16a34a] px-4 py-2 text-sm font-semibold text-white hover:brightness-[1.05]"
+                >
+                  Pesan Sekarang via WA
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <footer className="mt-auto border-t bg-white">
+        <div className="mx-auto max-w-6xl px-6 py-6 text-sm text-black/70 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div>© {new Date().getFullYear()} Ghani Bakery. All rights reserved.</div>
+          <div className="flex items-center gap-3">
+            <a
+              className="text-[#0f7a36] hover:underline"
+              href={`https://wa.me/${WA_NUMBER}`}
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              Chat WhatsApp
+            </a>
+            <span className="hidden sm:inline text-black/20">|</span>
+            <a className="hover:underline" href="#menu">Menu</a>
+          </div>
+        </div>
       </footer>
     </div>
   );
